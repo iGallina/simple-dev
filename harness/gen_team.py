@@ -23,23 +23,39 @@ import team_table as T  # noqa: E402
 START, END = "<!-- SIMPLE-DEV:TEAM:START -->", "<!-- SIMPLE-DEV:TEAM:END -->"
 
 
-def _present(root: Path, marker: str) -> bool:
-    return bool(list(root.glob(marker[5:]))) if marker.startswith("glob:") else (root / marker).exists()
+# Paths that belong to the harness itself, not the target project — skipped under --exclude-harness.
+HARNESS_FOOTPRINT = {"harness", ".claude", "_bmad", "_bmad-output", "graphify-out",
+                     "node_modules", "__pycache__"}
 
 
-def detect_disciplines(root: Path) -> list[tuple[str, str, str]]:
+def _in_footprint(root: Path, path: Path) -> bool:
+    return bool(set(path.relative_to(root).parts) & HARNESS_FOOTPRINT)
+
+
+def _present(root: Path, marker: str, exclude_harness: bool = False) -> bool:
+    if marker.startswith("glob:"):
+        matches = list(root.glob(marker[5:]))
+        if exclude_harness:
+            matches = [m for m in matches if not _in_footprint(root, m)]
+        return bool(matches)
+    if exclude_harness and set(Path(marker).parts) & HARNESS_FOOTPRINT:
+        return False
+    return (root / marker).exists()
+
+
+def detect_disciplines(root: Path, exclude_harness: bool = False) -> list[tuple[str, str, str]]:
     found = []
     for disc, markers, subagent in T.DISCIPLINES:
         for m in markers:
-            if _present(root, m):
+            if _present(root, m, exclude_harness):
                 found.append((disc, subagent, m.replace("glob:", "")))
                 break
     return found
 
 
-def detect_gaps(root: Path) -> list[dict]:
+def detect_gaps(root: Path, exclude_harness: bool = False) -> list[dict]:
     return [{"marker": m.replace("glob:", ""), "likely_discipline": d}
-            for m, d in T.KNOWN_UNMAPPED.items() if _present(root, m)]
+            for m, d in T.KNOWN_UNMAPPED.items() if _present(root, m, exclude_harness)]
 
 
 def _flow_list(items: list[str]) -> str:
@@ -118,12 +134,15 @@ def main() -> int:
     ap.add_argument("--out", default=None)
     ap.add_argument("--agents", default=None)
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--exclude-harness", action="store_true",
+                    help="skip the deployed harness footprint (harness/, .claude/, _bmad*) when "
+                         "detecting the project's own stack — set by the installer on a target")
     args = ap.parse_args()
 
     root = Path(args.cwd).resolve()
     project = root.name
-    disciplines = detect_disciplines(root)
-    gaps = detect_gaps(root)
+    disciplines = detect_disciplines(root, args.exclude_harness)
+    gaps = detect_gaps(root, args.exclude_harness)
 
     team_yaml = build_team_yaml(project, args.direction or "(no PROJECT-DIRECTION provided)", disciplines, gaps)
     if not args.quiet:

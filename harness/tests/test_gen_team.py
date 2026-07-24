@@ -68,7 +68,21 @@ def case_reproducible(root: Path) -> None:
     assert (root / "a.yaml").read_text() == (root / "b.yaml").read_text(), "output not reproducible"
 
 
-CASES = [case_roster_disciplines, case_agents_marker_merge, case_gap_detection, case_reproducible]
+def case_exclude_harness(root: Path) -> None:
+    # The deployed harness footprint (harness/*.py + .claude/skills) must NOT count as the
+    # project's stack under --exclude-harness; the real project marker (Gemfile) still does.
+    (root / "harness").mkdir(); (root / "harness" / "x.py").write_text("x = 1\n")
+    sk = root / ".claude" / "skills" / "foo"; sk.mkdir(parents=True); (sk / "SKILL.md").write_text("# foo\n")
+    (root / "Gemfile").write_text("gem 'rails'\n")
+    run(root, "--exclude-harness", "--direction", "rails app")
+    ty = (root / "team.yaml").read_text()
+    assert "ruby:" in ty, "real project stack (ruby) not detected"
+    assert "python:" not in ty, "harness python leaked into the project roster"
+    assert "markdown:" not in ty, "harness skills leaked into the project roster as markdown"
+
+
+CASES = [case_roster_disciplines, case_agents_marker_merge, case_gap_detection, case_reproducible,
+         case_exclude_harness]
 
 
 def main() -> int:

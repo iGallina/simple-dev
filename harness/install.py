@@ -67,7 +67,7 @@ def main() -> int:
     if not args.dry_run:
         gen = subprocess.run(
             [sys.executable, str(target / "harness" / "gen_team.py"),
-             "--cwd", str(target), "--direction", args.direction],
+             "--cwd", str(target), "--direction", args.direction, "--exclude-harness"],
             capture_output=True, text=True)
         print("  " + (gen.stdout.strip() or gen.stderr.strip()))
 

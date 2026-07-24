@@ -7,6 +7,7 @@ inner test_command is trivial (`true`/`false`) — no recursion into this suite.
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -23,14 +24,14 @@ def git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
-def make_repo(root: Path, test_command: str = "true") -> tuple[Path, str]:
+def make_repo(root: Path, test_command: str = "true", trace_gate: str = "off") -> tuple[Path, str]:
     repo = root / "repo"
     repo.mkdir()
     git(repo, "init", "-q", "-b", "main")
     git(repo, "config", "user.email", "t@t")
     git(repo, "config", "user.name", "t")
     (repo / "harness.toml").write_text(
-        f'[gate]\ntest_command = "{test_command}"\ntrace_gate = "off"\n'
+        f'[gate]\ntest_command = "{test_command}"\ntrace_gate = "{trace_gate}"\n'
         '[merge]\ntarget_branch = "main"\n'
     )
     (repo / "README.md").write_text("seed\n")
@@ -91,7 +92,31 @@ def case_merge_refuses_without_verdict(root: Path) -> None:
     assert rc == 11, f"expected 11 (no PASS verdict), got {rc}"
 
 
-CASES = [case_pass, case_missing_story_done, case_tests_fail, case_merge_refuses_without_verdict]
+def write_gate_decision(repo: Path, sid: str, status: str = "PASS") -> None:
+    d = repo / "_bmad-output" / "test-artifacts"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"gate-decision-{sid}.json").write_text(json.dumps({"gate_status": status, "story_id": sid}))
+
+
+def case_trace_pass(root: Path) -> None:
+    # Full gate incl. the trace check: tests pass + STORY-DONE valid + gate-decision PASS.
+    repo, sha = make_repo(root, test_command="true", trace_gate="require")
+    write_story_done(repo, "1-1", sha)
+    write_gate_decision(repo, "1-1", "PASS")
+    rc = run(RUNNER, repo, "--story", "1-1")
+    assert rc == 0, f"expected 0 (full gate PASS incl. trace), got {rc}"
+
+
+def case_trace_fail(root: Path) -> None:
+    repo, sha = make_repo(root, test_command="true", trace_gate="require")
+    write_story_done(repo, "1-1", sha)
+    write_gate_decision(repo, "1-1", "FAIL")
+    rc = run(RUNNER, repo, "--story", "1-1")
+    assert rc == 30, f"expected 30 (trace gate FAIL), got {rc}"
+
+
+CASES = [case_pass, case_missing_story_done, case_tests_fail, case_merge_refuses_without_verdict,
+         case_trace_pass, case_trace_fail]
 
 
 def main() -> int:

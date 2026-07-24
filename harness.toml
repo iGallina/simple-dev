@@ -1,0 +1,13 @@
+# simple-dev harness config — read by harness/gate_runner.py and harness/gate_merge.py.
+# The gate reads an EXIT CODE, not vibes. This file tells it how to run the tests.
+
+[gate]
+# Plain-python assert tests, zero framework dependency. Runs every harness/tests/test_*.py,
+# fails on the first non-zero exit. Swap for `pytest -q` etc. once the project has a suite.
+test_command = 'for t in harness/tests/test_*.py; do python3 "$t" || exit 1; done'
+trace_gate = "prefer"       # require | prefer | off  — prefer: skip trace when no gate-decision exists yet
+concerns_policy = "halt"    # halt | waive  — how a CONCERNS trace verdict is treated
+artifacts_dir = "_bmad-output"
+
+[merge]
+target_branch = "main"

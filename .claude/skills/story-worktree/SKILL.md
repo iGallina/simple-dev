@@ -35,14 +35,16 @@ incomplete step; never `--force` over it.
 ## Phase 2 — Pipeline steps (emit the Board at each transition)
 
 Run steps 1–5 from `harness/workflow-steps.md` in order. Execute each step in a fresh worker
-context when the harness supports it (its loadout comes from `team.yaml`); otherwise in the
-current context. Fail-fast: a step that reports failure or HALT stops the pipeline (leave
+context when the harness supports it (its loadout comes from `team.yaml`, its discipline from
+`harness/PONYTAIL.md`); otherwise in the current context. Fail-fast: a step that reports failure or HALT stops the pipeline (leave
 everything for inspection, report which step and why).
 
-**Before step 1, refresh context (graphify owns it):** run `python3 harness/graph.py check`; if
-it reports STALE, run `graphify update .`. `create-story` (step 1) consults
-`python3 harness/graph.py affected "<area the story touches>"` for blast-radius and bakes it into
-the story's Dev Notes. graph.py degrades gracefully — a missing graph never blocks a story.
+**Context is graphify's — read the project through it, keep it fresh.** Before step 1, run
+`python3 harness/graph.py check`; if it reports STALE, `graphify update .`. **Every step's worker
+reads code via graphify FIRST** — `graph.py query "<what>"` / `affected "<area>"` /
+`explain "<symbol>"` — before falling back to blind file scans; `create-story` bakes the
+blast-radius into the story's Dev Notes. graph.py degrades gracefully — a missing graph never
+blocks a story, and the graph is refreshed post-merge (Phase 5) so it never drifts far.
 
 **After each step transition, emit the Board:**
 ```

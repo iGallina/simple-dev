@@ -17,7 +17,8 @@ INSTALL = HARNESS / "install.py"
 
 
 def run(target: Path, *args: str) -> tuple[int, str]:
-    r = subprocess.run([sys.executable, str(INSTALL), "--target", str(target), *args],
+    # --no-graph: tests must never trigger a real graphify build (slow, may invoke the LLM).
+    r = subprocess.run([sys.executable, str(INSTALL), "--target", str(target), "--no-graph", *args],
                        capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -28,6 +29,7 @@ def case_deploys_and_preserves(root: Path) -> None:
     rc, out = run(tgt, "--direction", "test project")
     assert rc == 0, out
     assert (tgt / "harness" / "gate_runner.py").exists(), "gate not deployed"
+    assert (tgt / "harness" / "PONYTAIL.md").exists(), "ponytail discipline not deployed (foundation)"
     assert (tgt / "harness.toml").exists(), "config not deployed"
     assert (tgt / ".claude/skills/create-story/SKILL.md").exists(), "delivery skill not deployed"
     assert (tgt / ".claude/skills/_testarch-knowledge").exists(), "shared knowledge not deployed"

@@ -5,9 +5,11 @@ description: "Use when the user asks to drive delivery — 'run the sprint', 'de
 
 # scrum-master
 
-The decider above the loop. Ponytail is the discipline (injected into every child via its
-SubagentStart hook); the Board + `sprint-status.yaml` + `team.yaml` are the state; this skill is
-the judgment that picks and dispatches. It holds no state of its own — it reads the files.
+The decider above the loop. `harness/PONYTAIL.md` is the baked-in discipline every dispatched
+child works under (the foundation — no plugin required; the global `ponytail` plugin's
+SubagentStart hook layers on top when present); the Board + `sprint-status.yaml` + `team.yaml`
+are the state; this skill is the judgment that picks and dispatches. It holds no state of its own
+— it reads the files.
 
 ## What the PO controls (everything else is machine-driven)
 
@@ -22,8 +24,8 @@ the judgment that picks and dispatches. It holds no state of its own — it read
    (macro → story) in one line. Emit the Board: `python3 harness/board.py --story {ID} --phase create-story`.
 2. **Dispatch** it through the `story-worktree` skill. For each loop step, resolve the loadout
    from `team.yaml`: `roles[step].by_discipline[touched] or roles[step].default` → spawn a
-   subagent of that `subagent_type` carrying those `skills` **and the goal-ladder** (task goal +
-   its story/macro parents). Ponytail governs every child.
+   subagent of that `subagent_type` carrying those `skills`, **the goal-ladder** (task goal + its
+   story/macro parents), **and `harness/PONYTAIL.md`** — every child works under the discipline.
 3. **Gate** is story-worktree's hard gate (`gate_runner` exit code). Exit 0 → merge via
    `gate_merge`. Non-zero → HALT: surface the verdict `reasons`, preserve the worktree, stop.
    Never override the exit code.

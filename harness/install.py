@@ -38,6 +38,7 @@ def main() -> int:
     ap.add_argument("--target", required=True)
     ap.add_argument("--direction", default="")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--no-graph", action="store_true", help="skip seeding the code graph (tests/CI)")
     args = ap.parse_args()
 
     target = Path(args.target).resolve()
@@ -70,6 +71,12 @@ def main() -> int:
              "--cwd", str(target), "--direction", args.direction, "--exclude-harness"],
             capture_output=True, text=True)
         print("  " + (gen.stdout.strip() or gen.stderr.strip()))
+
+    # 3b. Seed the code graph — graphify owns context; kept fresh per-story + post-merge thereafter.
+    if not args.dry_run and not args.no_graph:
+        graph = subprocess.run([sys.executable, str(target / "harness" / "graph.py"), "build",
+                                "--cwd", str(target)], capture_output=True, text=True)
+        print("  " + (graph.stdout.strip() or graph.stderr.strip()))
 
     # 4. Prereq + residue reports (never acted on).
     warnings = []

@@ -30,5 +30,9 @@ Every story and task carries an explicit **goal-ladder**: `macro/epic goal → s
 
 ## The stop test
 
-Before adding anything, ask the ponytail question: *does this need to exist at all?*
+Before adding anything, run the [ponytail ladder](./PONYTAIL.md): *does this need to exist at all?*
 If it does not trace to a loop step (harness) or serve a stated goal (work), it does not go in.
+
+[`PONYTAIL.md`](./PONYTAIL.md) is the **behavioral engine** of this Governor — the baked-in
+discipline (no plugin required) that every dispatched agent works under. The Governor decides what
+may exist; ponytail decides how it gets built.

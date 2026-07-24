@@ -48,23 +48,33 @@ def passthrough(action: str, root: Path, query: str) -> int:
     if not shutil.which("graphify"):
         print(f"[graph] graphify not installed — skipping `{action}` (non-blocking)")
         return 0
-    args = ["graphify", "update", str(root)] if action == "update" else ["graphify", action, query]
-    r = subprocess.run(args, cwd=root, capture_output=True, text=True)
-    print((r.stdout or r.stderr).strip())
+    if action == "build":
+        args, timeout = ["graphify", str(root)], 180        # full build (first time)
+    elif action == "update":
+        args, timeout = ["graphify", "update", str(root)], 120  # incremental (AST, no LLM)
+    else:
+        args, timeout = ["graphify", action, query], 60
+    try:
+        r = subprocess.run(args, cwd=root, capture_output=True, text=True, timeout=timeout)
+        print((r.stdout or r.stderr).strip())
+    except subprocess.TimeoutExpired:
+        print(f"[graph] `{action}` exceeded {timeout}s — run `graphify {root}` manually (non-blocking)")
+    except OSError as exc:
+        print(f"[graph] `{action}` skipped — {exc} (non-blocking)")
     return 0  # never block the loop on a context tool
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("action", choices=["check", "update", "affected", "query"])
+    ap.add_argument("action", choices=["check", "build", "update", "affected", "query"])
     ap.add_argument("--cwd", default=".")
     ap.add_argument("--query", default="")
     args = ap.parse_args()
     root = Path(args.cwd).resolve()
     if args.action == "check":
         return check(root)
-    if args.action == "update":
-        return passthrough("update", root, "")
+    if args.action in ("build", "update"):
+        return passthrough(args.action, root, "")
     return passthrough(args.action, root, args.query)
 
 

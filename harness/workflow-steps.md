@@ -49,4 +49,7 @@ it, never the agent).
 - Each step runs as a fresh subagent (its loadout comes from `team.yaml`, Phase E), fail-fast.
 - Status updates (`sprint-status.yaml` → done, story file → done) happen in the worktree
   BEFORE the gate, so they are part of the gated commit set.
-- The Board (Phase C) emits one line per step transition, including the live goal-ladder.
+- The Board: at each step transition the loop runs
+  `python3 harness/board.py --story {ID} --phase {step}`, which rewrites `BOARD.md` and prints
+  the one-line log (including the live goal-ladder). The projector exists (Phase C); the
+  physical wiring into the loop-runner lands with the runner in Phase D.

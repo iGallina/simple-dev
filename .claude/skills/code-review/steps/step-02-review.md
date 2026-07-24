@@ -13,7 +13,7 @@ failed_layers: '' # set at runtime: comma-separated list of layers that failed o
 
 1. If `{review_mode}` = `"no-spec"`, note to the user: "Acceptance Auditor skipped — no spec file provided."
 
-2. Launch Blind Hunter and Edge Case Hunter in parallel without prior conversation context. If `{review_mode}` = `"full"`, include the Acceptance Auditor in the same parallel launch. If subagents are not available, generate prompt files in `{implementation_artifacts}` for each applicable reviewer role and HALT. Ask the user to run each in a separate session (ideally a different LLM) and paste back the findings. When findings are pasted, resume from this point and proceed to step 3.
+2. Launch Blind Hunter, Edge Case Hunter, and the Goal Alignment Auditor in parallel without prior conversation context. If `{review_mode}` = `"full"`, also include the Acceptance Auditor in the same parallel launch. If subagents are not available, generate prompt files in `{implementation_artifacts}` for each applicable reviewer role and HALT. Ask the user to run each in a separate session (ideally a different LLM) and paste back the findings. When findings are pasted, resume from this point and proceed to step 3.
 
    - **Blind Hunter** — prompt:
      > Invoke the `bmad-review-adversarial-general` skill on this diff:
@@ -27,6 +27,12 @@ failed_layers: '' # set at runtime: comma-separated list of layers that failed o
 
    - **Acceptance Auditor** (only if `{review_mode}` = `"full"`) — prompt:
      > You are an Acceptance Auditor. Review the provided diff against `{spec_file}` and any loaded context docs. Check for: violations of acceptance criteria, deviations from spec intent, missing implementation of specified behavior, contradictions between spec constraints and actual code. Output findings as a Markdown list. Each finding: one-line title, which AC/constraint it violates, and evidence from the diff.
+     >
+     > Diff:
+     > {diff_output}
+
+   - **Goal Alignment Auditor** (BLOCKING — the Focus Governor, work scope) — prompt:
+     > You are a Goal Alignment Auditor. The story's goal-ladder is: task «{task_goal}» → story «{story_goal}» → macro «{macro_goal}». Review this diff and flag ANY change that does not serve the stated TASK goal — scope creep, unrelated refactors, features beyond the goal, opportunistic edits. Output a Markdown list; each finding: what exceeds or misses the goal + the diff evidence. Return `[]` only if every change serves the task goal.
      >
      > Diff:
      > {diff_output}

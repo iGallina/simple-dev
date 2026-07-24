@@ -39,6 +39,11 @@ context when the harness supports it (its loadout comes from `team.yaml`); other
 current context. Fail-fast: a step that reports failure or HALT stops the pipeline (leave
 everything for inspection, report which step and why).
 
+**Before step 1, refresh context (graphify owns it):** run `python3 harness/graph.py check`; if
+it reports STALE, run `graphify update .`. `create-story` (step 1) consults
+`python3 harness/graph.py affected "<area the story touches>"` for blast-radius and bakes it into
+the story's Dev Notes. graph.py degrades gracefully — a missing graph never blocks a story.
+
 **After each step transition, emit the Board:**
 ```
 python3 harness/board.py --story {ID} --phase {step}
@@ -72,8 +77,9 @@ From the ORIGINAL repo (not the worktree):
 ```
 python3 harness/gate_merge.py --story {ID} --branch story/{ID} --cleanup --worktree <path>
 ```
-Exit 0 → `python3 harness/board.py --story {ID} --phase done`; report the merge SHA +
-regression time. Exit 11/12/13/14 → print its JSON verbatim (it contains recovery) and stop.
+Exit 0 → `python3 harness/board.py --story {ID} --phase done` and `python3 harness/graph.py
+update` (refresh the graph with the merged code); report the merge SHA + regression time.
+Exit 11/12/13/14 → print its JSON verbatim (it contains recovery) and stop.
 Exit 14's `git reset --hard` recovery is printed for the HUMAN — never execute it.
 
 ## Output

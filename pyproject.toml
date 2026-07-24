@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "simple-dev"
+version = "0.1.0"
+description = "A minimal, accountable dev harness — one loop, one board, one gate — installable into any project."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+# Install with: uv tool install --editable ~/Projetos/simple-dev
+# Then run:     simple-dev install --target <project-dir> --direction "one line"
+simple-dev = "harness.install:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["harness"]

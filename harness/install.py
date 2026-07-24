@@ -96,5 +96,12 @@ def main() -> int:
     return 0
 
 
+def cli() -> None:
+    """Console entry (`simple-dev`). Accepts the npx-style verb: `simple-dev install --target …`."""
+    if len(sys.argv) > 1 and sys.argv[1] == "install":
+        sys.argv.pop(1)
+    raise SystemExit(main())
+
+
 if __name__ == "__main__":
     sys.exit(main())

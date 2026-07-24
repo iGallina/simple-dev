@@ -4,6 +4,14 @@ Status: ready-for-dev
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
+## Focus (goal-ladder)
+
+<!-- The Focus Governor, work scope. A subagent working this story is handed all three rungs
+     so it never loses the plot. The Board renders this line live. Review checks the diff against it. -->
+
+- macro goal: {{macro_goal}}  <!-- the epic / PRD objective this story serves -->
+- story goal: {{story_goal}}  <!-- this story, one line -->
+
 ## Story
 
 As a {{role}},
@@ -16,9 +24,11 @@ so that {{benefit}}.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 (AC: #)
+<!-- Each task carries its own one-line goal (the micro rung). ATDD is a task, never a hidden phase. -->
+
+- [ ] Task 1 — goal: {{task_1_goal}} (AC: #)
   - [ ] Subtask 1.1
-- [ ] Task 2 (AC: #)
+- [ ] Task 2 — goal: {{task_2_goal}} (AC: #)
   - [ ] Subtask 2.1
 
 ## Dev Notes

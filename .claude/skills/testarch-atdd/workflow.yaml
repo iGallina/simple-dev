@@ -1,0 +1,43 @@
+# Test Architect workflow: testarch-atdd
+name: testarch-atdd
+# prettier-ignore
+description: 'Generate red-phase acceptance test scaffolds using TDD cycle. Use when the user says "lets write acceptance tests" or "I want to do ATDD"'
+
+# Critical variables — defaults below; override via {project-root}/harness.toml if present
+output_folder: "{project-root}/_bmad-output"
+test_artifacts: "{project-root}/_bmad-output/test-artifacts"
+document_output_language: "English"
+date: system-generated
+
+# Workflow components
+installed_path: "."
+instructions: "./instructions.md"
+validation: "./checklist.md"
+template: "./atdd-checklist-template.md"
+
+# Variables and inputs
+variables:
+  test_dir: "{project-root}/tests" # Root test directory
+
+# Output configuration
+default_output_file: "{test_artifacts}/atdd-checklist-{story_key}.md"
+
+# Required tools
+required_tools:
+  - read_file # Read story markdown, framework config
+  - write_file # Create test files, checklist, factory stubs
+  - create_directory # Create test directories
+  - list_files # Find existing fixtures and helpers
+  - search_repo # Search for similar test patterns
+
+tags:
+  - qa
+  - atdd
+  - test-architect
+  - tdd
+  - red-green-refactor
+
+execution_hints:
+  interactive: false # Minimize prompts
+  autonomous: true # Proceed without user input unless blocked
+  iterative: true

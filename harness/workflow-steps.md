@@ -11,17 +11,19 @@ this table.** If it is not here, it is a removal candidate.
 
 | # | step | command | source | purpose |
 |---|------|---------|--------|---------|
-| 1 | create-story | `bmad-create-story {ID}` | vanilla bmm | Story file from epic + context, with the goal-ladder (`Focus` block) |
-| 2 | atdd (red) | `testarch-atdd {ID}` | enxa feeder | Failing acceptance scaffolds BEFORE implementation |
-| 3 | dev-story (green) | `bmad-dev-story {ID}` | vanilla bmm | Red-green-refactor per task; ticks subtask checkboxes |
-| 4 | seal | `harness/seal_story.py {ID}` | new (M4) | Writes the `STORY-DONE` contract (commits + tests) the gate consumes |
-| 5 | code-review | `bmad-code-review {ID}` + goal-alignment layer | vanilla bmm + M4 | Adversarial review; a diff that misses its task goal is BLOCKED (drift dies here) |
-| 6 | trace (gate input) | `testarch-trace {ID}` | enxa feeder | Coverage matrix; emits `gate-decision-{ID}.json` |
+| 1 | create-story | `create-story {ID}` | ported (gate-coupled) | Story file from epic + context, with the goal-ladder (`Focus` block) |
+| 2 | atdd (red) | `testarch-atdd {ID}` | ported | Failing acceptance scaffolds BEFORE implementation |
+| 3 | dev-story (green) | `dev-story {ID}` | ported | Red-green-refactor per task; ticks subtasks; **writes the `STORY-DONE` contract** |
+| 4 | code-review | `code-review {ID}` | ported | 3-layer adversarial (blind / edge-case / acceptance); goal-alignment layer added in G3 |
+| 5 | trace (gate input) | `testarch-trace {ID}` | ported | Coverage matrix; emits `gate-decision-{ID}.json` |
 
-Net port from enxa's method skills: **2** (atdd, trace). The 3 standard skills are vanilla bmm.
-`seal_story.py` and the goal-alignment review layer are built during loop wiring (M4).
+Full port of the 5 delivery skills (testarch knowledge de-duplicated to one shared copy). Vanilla
+bmm supplies PLANNING (create-prd → architecture → epics → sprint-planning); its
+`bmad-{create-story,dev-story,code-review}` are now redundant — the Governor self-audit (G2)
+flags them. The goal-alignment review layer is added in G3. **No seal step:** `dev-story` writes
+`STORY-DONE` natively.
 
-## The hard gate (after step 6 — mechanical, non-negotiable)
+## The hard gate (after step 5 — mechanical, non-negotiable)
 
 ```
 python3 harness/gate_runner.py --story {ID}
@@ -44,7 +46,7 @@ it, never the agent).
 ## Conventions
 
 - Branch: `story/{ID}` · Worktree: `../simple-dev-story-{ID}`
-- Each step runs as a fresh subagent (its loadout comes from `team.yaml`, M2), fail-fast.
+- Each step runs as a fresh subagent (its loadout comes from `team.yaml`, Phase E), fail-fast.
 - Status updates (`sprint-status.yaml` → done, story file → done) happen in the worktree
   BEFORE the gate, so they are part of the gated commit set.
-- The Board (M1) emits one line per step transition, including the live goal-ladder.
+- The Board (Phase C) emits one line per step transition, including the live goal-ladder.
